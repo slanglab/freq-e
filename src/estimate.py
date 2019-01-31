@@ -124,35 +124,6 @@ def get_beta_prior():
     assert len(log_prior) == len(DEFAULT_THETA_GRID)
     return log_prior 
 
-# def mll_curve_stable(logodds, pi):
-#     """
-#     Parameters:
-#         logodds: nparray size (ndocs, )
-#             log(p(y=1 | w) / p(y=0 | w))
-#             = wx + b
-#             (which comes out of sklearn logistic regression decision_function)
-
-#         pi: prevelance of positive class
-#             estimated from the training data 
-            
-#     Returns:
-#         mll_curve: numpy array, size (len(DEFAULT_THETA_GRID),) 
-
-#     """
-#     def mll_curve_onedoc_onetheta_stable(logodds_onedoc, log_pi_ratio, theta):
-#         term = 1.0 - theta + np.exp(np.log(theta) + logodds_onedoc + log_pi_ratio)
-#         return np.log(term)
-
-#     def mll_curve_onedoc_stable(logodds_onedoc, log_pi_ratio):
-#         curve = np.array([mll_curve_onedoc_onetheta_stable(logodds_onedoc, log_pi_ratio, theta) for theta in DEFAULT_THETA_GRID])
-#         return curve 
-
-#     curve = np.zeros(len(DEFAULT_THETA_GRID))
-#     log_pi_ratio = np.log((1.0 - pi)/ pi)
-#     for logodds_onedoc in logodds:
-#         curve += mll_curve_onedoc_stable(logodds_onedoc, log_pi_ratio)
-#     return curve
-
 class FreqEstimate(): 
     """
     Description 
