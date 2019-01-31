@@ -1,8 +1,10 @@
 import sys, os, pytest
+import numpy as np
+import pdb  
 
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../src/')
-from ecdf import *   
+from ecdf import *    
 
 def test_hdi():
     d = CategDist({0:1,1:2,2:7})
@@ -70,4 +72,16 @@ def test_functions():
     assert d.icdf(0.7, mode='toosmall') == 1
     assert d.icdf(0.2, mode='toobig') == 1
     assert d.icdf(0.2, mode='toosmall') == 1
+
+def test_mll(): 
+    import estimate 
+    pos_odds = np.array([0.2, 0.7])
+    pred_logodds = np.log(pos_odds/(1.0 - pos_odds))
+    label_prior = 0.7 
+    theta_grid_test = np.array([0.3, 0.6])
+
+    #worked out this example by hand
+    ans = np.array([0.669050, 0.213574])
+    output = estimate.mll_curve_simple(pred_logodds, label_prior, theta_grid=theta_grid_test)
+    assert np.allclose(ans, output)
 
