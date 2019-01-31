@@ -21,13 +21,6 @@ from scipy.stats import beta
 import scipy.special
 import ecdf
 
-"""
-TODO: 
-- what are the alternatives to the grid search? 
-- double check MLL curve is working and matches the math!
-
-Clean up ecdf and make sure you understand it all!  
-"""
 DEFAULT_THETA_GRID_EPSILON = .001
 DEFAULT_THETA_GRID = np.arange(0, 1 + DEFAULT_THETA_GRID_EPSILON, DEFAULT_THETA_GRID_EPSILON)
 
@@ -148,7 +141,7 @@ class FreqEstimate():
         self.conf_level = conf_level
         self.train_mean_acc = None 
 
-    def fit(self, X, y):
+    def fit_disc_classifier(self, X, y):
         """
         Fits logistic regression estimator via 
         - grid search over L1 penalty 
@@ -168,18 +161,22 @@ class FreqEstimate():
         self.train_mean_acc = train_mean_acc 
         return best_model
 
-
     def predict_freq(self, trained_model, y_train, X_test):
         """
         "LR-Implicit" or "Implict likelihood generative reinterpretation" method 
         from Keith and O'Connor 2018
 
-
         Point estimate and confidence intervals  
         """ 
+        assert type(y_train) == type(X_test) == np.ndarray
+
         train_prior = np.mean(y_train)
-        log_odds = trained_model.decision_function(X_test)
-        log_post_probs = log_post_uniform_prior(log_odds, train_prior)
+        try: 
+            log_odds = trained_model.decision_function(X_test)
+        except: 
+            print('trained_model must be a sklearn trained classifier that has a .decision_function()')
+
+        log_post_probs = mll_curve_simple(log_odds, train_prior)
         log_prior = get_beta_prior()
         log_post_probs = np.add(log_post_probs, log_prior)
         map_est = generative_get_map_est(log_post_probs)
