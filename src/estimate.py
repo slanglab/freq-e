@@ -103,7 +103,6 @@ def generative_get_map_est(log_post_probs):
     
     return map_est
 
-
 def get_beta_prior():
     '''
      (2) Beta(1+eps, 1+eps)
@@ -117,29 +116,16 @@ def get_beta_prior():
     assert len(log_prior) == len(DEFAULT_THETA_GRID)
     return log_prior 
 
+def calc_log_odds(pos_probs): 
+    """
+    pos_probs : probabilites of the positive class
+    """
+    return np.log(pos_probs/(1.0 - pos_probs))
+
 class FreqEstimate(): 
-    """
-    Description 
 
-    Parameters
-    ----------
-    disc_classifier : str, default: Logistic Regression 
-        Specify the sklearn class discriminitive classifier 
-        of your choice. This will be used within the 
-        discriminitive-generative framework 
-
-    conf_level : float, default=0.95
-        Confidence level for the confidence intervals that 
-        will be constructed 
-    
-    Attributes
-    ---------
-
-    """
-
-    def __init__(self, conf_level=0.95): 
-        self.conf_level = conf_level
-        self.train_mean_acc = None 
+    def __init__(self): 
+        pass 
 
     def fit_disc_classifier(self, X, y):
         """
@@ -150,7 +136,7 @@ class FreqEstimate():
         assert type(X) == type(y) == np.ndarray
         print('TRAINING DISCRIMINATIVE MODEL')
         parameters = {'C': [1.0/2.0**reg for reg in np.arange(-12, 12)]}
-        lr = LogisticRegression(penalty='l1')
+        lr = LogisticRegression(penalty='l1', solver='liblinear')
         grid_search = GridSearchCV(lr, parameters, cv=10, refit=True, 
                                    scoring=make_scorer(log_loss, greater_is_better=False))
         grid_search.fit(X, y)
@@ -158,28 +144,60 @@ class FreqEstimate():
         print(best_model)
         train_mean_acc = best_model.score(X, y)
         print('Training mean accuracy=', train_mean_acc)
-        self.train_mean_acc = train_mean_acc 
         return best_model
 
-    def predict_freq(self, trained_model, y_train, X_test):
+    def infer_freq(self, y_train, X_test, conf_level=0.95, trained_model=None, test_pred_probs=None):
         """
         "LR-Implicit" or "Implict likelihood generative reinterpretation" method 
         from Keith and O'Connor 2018
 
-        Point estimate and confidence intervals  
-        """ 
+        Point estimate and confidence intervals
+
+        Parameters
+        ----------
+        y_train : numpy.ndarray
+            Numpy array of the training y values
+            Must consist of only 0's and 1's  
+
+        X_test : numpy.ndarray 
+            Numpy array of the test X matrix 
+
+        conf_level : float, default: 0.95
+            The confidence level for the inferred confidence intervals 
+            Must be between 0.0 and 1.0  
+
+        trained_model : skelarn.linear_model class, default : None 
+            As an alternative to test_pred_probs, a user may pass in a trained_model
+            which will directly find the predicted probabilities on the test instances
+
+        test_pred_probs : numpy.ndarray
+            predicted probability (of the positive class) on the 
+            test set  
+        """
+        if trained_model == None and type(test_pred_probs) == type(None): 
+            raise Exception('Must specify EITHER a trained model (sklearn.linear_model class) OR test_pred_probs (predicted probabilities on the test instances)') 
+
         assert type(y_train) == type(X_test) == np.ndarray
+        
+        #check to make sure y_train is binary (only 0's and 1's)
+        assert np.array_equal(y_train, y_train.astype(bool)) == True 
+        assert conf_level > 0.0 and conf_level <1.0 
 
         train_prior = np.mean(y_train)
-        try: 
-            log_odds = trained_model.decision_function(X_test)
-        except: 
-            print('trained_model must be a sklearn trained classifier that has a .decision_function()')
+        if trained_model == None:
+            if type(test_pred_probs) != np.ndarray: raise Exception('test_pred_probs must be a numpy array')
+            assert test_pred_probs.shape[0] == X_test.shape[0] 
+            log_odds = calc_log_odds(test_pred_probs)
+        elif trained_model != None:  
+            try: 
+                log_odds = trained_model.decision_function(X_test)
+            except: 
+                print('trained_model must be a sklearn trained classifier that has a .decision_function()')
 
         log_post_probs = mll_curve_simple(log_odds, train_prior)
         log_prior = get_beta_prior()
         log_post_probs = np.add(log_post_probs, log_prior)
         map_est = generative_get_map_est(log_post_probs)
-        conf_interval = get_conf_interval(log_post_probs, self.conf_level)
+        conf_interval = get_conf_interval(log_post_probs, conf_level)
         return {'point': map_est, 'conf_interval': conf_interval}
 

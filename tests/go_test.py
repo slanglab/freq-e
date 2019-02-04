@@ -85,3 +85,13 @@ def test_mll():
     output = estimate.mll_curve_simple(pred_logodds, label_prior, theta_grid=theta_grid_test)
     assert np.allclose(ans, output)
 
+def test_infer_freq():
+    import estimate 
+    freq_e = estimate.FreqEstimate()
+    #test to make sure you can only put in one or the other but not both 
+    with pytest.raises(Exception): freq_e.infer_freq(np.zeros(3), np.zeros((3, 3)), trained_model=None, test_pred_probs=None)
+
+    #test importing a list to pred_probs
+    with pytest.raises(Exception): freq_e.infer_freq(np.zeros(3), np.zeros((3, 3)), trained_model=None, test_pred_probs=[1, 2, 3])
+
+
