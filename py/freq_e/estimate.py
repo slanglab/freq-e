@@ -20,8 +20,6 @@ import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss, make_scorer
-from scipy.stats import beta
-import scipy.special
 from freq_e import ecdf
 
 DEFAULT_THETA_GRID_EPSILON = .001
