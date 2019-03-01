@@ -1,3 +1,13 @@
+"""
+To run all unit tests (test_*):
+    py.test go_test.py
+
+To run and show all output:
+    py.test -vs go_test.py
+
+The -k flag is also useful to run only some tests
+"""
+
 import sys, os, pytest
 import numpy as np
 # import pdb  
@@ -46,6 +56,37 @@ def test_hdi_unif():
     assert d.hdi(0.4)==(2,3)
     assert d.hdi(0.4) in { (2,3), (3,4) }
 
+def interval_contains(A,B):
+    """does A contain B?"""
+    a_lo,a_hi = A
+    b_lo,b_hi = B
+    return a_lo <= b_lo <= b_hi <= a_hi
+
+def test_interval_contains():
+    assert interval_contains([1,3], [1,2])
+    assert interval_contains([1,3], [1,3])
+    assert not interval_contains([1,3], [1,5])
+    assert not interval_contains([1,3], [2,5])
+    assert not interval_contains([1,3], [8,9])
+    assert not interval_contains([1,3], [-11,-10])
+    assert not interval_contains([1,3], [-11,2])
+    assert not interval_contains([1,3], [-11,1])
+
+def test_hdi_coverage_simple():
+    def monotonic_interval_test(d):
+        intervals = [d.hdi(c) for c in np.arange(.1, 1.1, .1)]
+        for i in range(len(intervals)-1):
+            for j in range(i, len(intervals)-1):
+                int1,int2 = intervals[i], intervals[j]
+                assert interval_contains(int2, int1)
+    d = CategDist({ 1:10, 2:20, 3:30, 4:10 })
+    monotonic_interval_test(d)
+    for i in range(100):
+        n = 100
+        counts = np.random.random_integers(0,1000, size=n)
+        d = CategDist( {k:v for k,v in zip(range(n), counts) })
+        monotonic_interval_test(d)
+    
 def test_functions():
     # Note: these were developed after observing output.  So a chance something
     # may have been specified incorrectly.
@@ -73,6 +114,8 @@ def test_functions():
     assert d.icdf(0.7, mode='toosmall') == 1
     assert d.icdf(0.2, mode='toobig') == 1
     assert d.icdf(0.2, mode='toosmall') == 1
+
+
 
 def test_mll(): 
     pos_odds = np.array([0.2, 0.7])
