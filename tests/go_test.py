@@ -1,10 +1,11 @@
 import sys, os, pytest
 import numpy as np
-import pdb  
+# import pdb  
 
 myPath = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, myPath + '/../src/')
-from ecdf import *    
+sys.path.insert(0, os.path.join(myPath, '../py'))
+from freq_e.ecdf import CategDist
+from freq_e import estimate
 
 def test_hdi():
     d = CategDist({0:1,1:2,2:7})
@@ -74,7 +75,6 @@ def test_functions():
     assert d.icdf(0.2, mode='toosmall') == 1
 
 def test_mll(): 
-    import estimate 
     pos_odds = np.array([0.2, 0.7])
     pred_logodds = np.log(pos_odds/(1.0 - pos_odds))
     label_prior = 0.7 
@@ -86,7 +86,6 @@ def test_mll():
     assert np.allclose(ans, output)
 
 def test_infer_freq():
-    import estimate 
     freq_e = estimate.FreqEstimate()
     #test to make sure you can only put in one or the other but not both 
     with pytest.raises(Exception): freq_e.infer_freq(np.zeros(3), np.zeros((3, 3)), trained_model=None, test_pred_probs=None)
