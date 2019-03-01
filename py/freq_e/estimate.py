@@ -111,9 +111,9 @@ class FreqEstimate():
         self.trained_model = None 
         self.train_prior = None  
 
-    def fit(self, X, y):
+    def train_cross_val(self, X, y):
         """
-        Fits logistic regression estimator via 
+        Trains logistic regression estimator via 
         - grid search over L1 penalty 
         - finding the best model by minimizing log loss on 10-fold cross-validation 
         """
@@ -162,7 +162,7 @@ class FreqEstimate():
         log_post_probs = mll_curve_simple(log_odds, self.train_prior)
         map_est = generative_get_map_est(log_post_probs)
         conf_interval = get_conf_interval(log_post_probs, conf_level)
-        return {'point': map_est, 'conf_interval': conf_interval}
+        return {'point': map_est, 'conf_interval_'+str(int(conf_level*100))+'%': conf_interval}
 
 def infer_freq(X_test, label_prior, conf_level=0.95, trained_model=None, test_pred_probs=None):
     """
@@ -212,5 +212,5 @@ def infer_freq(X_test, label_prior, conf_level=0.95, trained_model=None, test_pr
     log_post_probs = mll_curve_simple(log_odds, label_prior)
     map_est = generative_get_map_est(log_post_probs)
     conf_interval = get_conf_interval(log_post_probs, conf_level)
-    return {'point': map_est, 'conf_interval': conf_interval}
+    return {'point': map_est, 'conf_interval_'+str(int(conf_level*100))+'%': conf_interval}
 
