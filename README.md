@@ -14,7 +14,7 @@ Installing the (test) `freq-e` package:
 # Usage 
 
 As we specify in `py_tutorial/tutorial.ipynb`, there are three different ways to obtain class frequency estimates: 
-1. Create a `FreqEstimate` object and use the built-in training and 10-fold cross-validation method with logistic regression. 
+1. Create a `FreqEstimator` object and use the built-in training and 10-fold cross-validation method with logistic regression. 
 2. Use the `infer_freq()` method and pass in a pre-trained scikit-learn linear model (e.g. `Logistic_Regression`). Here the model class is restricted to scikit-learn models that have a `.decision_function()` method. 
 3. Use the `infer_freq()` method and pass in the predicted probabilities of the positive class of the test set. 
 

@@ -105,7 +105,7 @@ def test_hdi_coverage_simple():
         d = CategDist( {k:v for k,v in zip(range(n), counts) })
         monotonic_interval_test(d)
     
-def test_functions():
+def test_ecdf_functions():
     # Note: these were developed after observing output.  So a chance something
     # may have been specified incorrectly.
     # These are intended to be run with "py.test -v ecdf.py" from the "pytest" package.
@@ -147,7 +147,7 @@ def test_mll():
     assert np.allclose(ans, output)
 
 def test_infer_freq():
-    freq_e = estimate.FreqEstimate()
+    freq_e = estimate.FreqEstimator()
     #test to make sure you can only put in one or the other but not both 
     with pytest.raises(Exception): freq_e.infer_freq(np.zeros(3), np.zeros((3, 3)), trained_model=None, test_pred_probs=None)
 

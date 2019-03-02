@@ -109,7 +109,7 @@ def calc_log_odds(pos_probs):
     p = np.clip(p, 1e-15, 1 - 1e-15)
     return np.log(p/(1.0 - p))
 
-class FreqEstimate(): 
+class FreqEstimator(): 
 
     def __init__(self): 
         self.trained_model = None 
