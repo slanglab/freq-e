@@ -4,18 +4,22 @@ from collections import Counter
 
 class CategDist:
     """
-    Represents an explicit categorical distribution.
-    This includes CDF, Inverse CDF, and Highest Density Interval
-    implementations that assume the the domain is ordered (for CDF and ICDF)
-    and is reasonable to do numerical subtraction on (for HDI).
-    This is intended to support empirical CDF-type work with samples or
-    probability evaluations on a grid.
+    Represents a discrete distribution over an explicitly enumerated numeric
+    domain, supporting various queries.
+    (The CDF and Inverse CDF implementations only assume the domain is ordered,
+    but everything is designed/tested for integer and floating-point domains.)
+
+    This is intended to support empirical CDF, ICDF, and HDI functionality
+    from either
+    (1) 1-D numerical samples (all with equal weights) -- e.g. dist_from_samples()
+    (2) Probabilities for points on a 1-D grid -- e.g. dist_from_logprobs()
     """
     def __init__(self, value_to_unnorm_prob={}, normalizer=None):
         """
-        Create parallel domain and probs lists.
-        unnorm probs could just be counts.
+        `value_to_unnorm_prob` maps every value in the domain to its unnormalized probability.
+        Note the unnormalized probs could just be counts, or even a Counter object.
         """
+        # self.domain, self.probs are *parallel* lists.
         self.domain = sorted(value_to_unnorm_prob.keys())
         self.size = len(self.domain)
         if normalizer is None:
@@ -23,22 +27,21 @@ class CategDist:
         self.probs = [value_to_unnorm_prob[x]/normalizer for x in self.domain]
         self.value_to_prob = dict(list(zip(self.domain, self.probs)))
 
-        #get the mean of the distribution 
-        self.get_mean()
-        self.get_posterior_variance()
+        self.store_mean()
+        self.store_variance()
 
-    def get_pmf_cdf(self):
+    def store_pmf_cdf(self):
         self.cdf_values = {}
         self.pmf_values = {}
         for x in self.domain:
             self.pmf_values[x] = self.pmf(x)
             self.cdf_values[x] = self.cdf(x)
 
-    def get_mean(self):
-        self.post_mean = np.sum(np.array([val*prob for val, prob in self.value_to_prob.items()]))
+    def store_mean(self):
+        self.mean = np.sum(np.array([val*prob for val, prob in self.value_to_prob.items()]))
 
-    def get_posterior_variance(self): 
-        self.post_var = np.sum(np.array([(val**2)*prob for val, prob in self.value_to_prob.items()])) - self.post_mean**2
+    def store_variance(self): 
+        self.var = np.sum(np.array([(val**2)*prob for val, prob in self.value_to_prob.items()])) - self.mean**2
 
     def view(self):
         print("Domain size %s" % self.size)
@@ -110,7 +113,7 @@ class CategDist:
                 assert False, "Didn't find value with prob at least %s" % p
         elif mode=='toosmall':
             # go in descending order
-            # list(xrange(5,-1,-1)) => [5, 4, 3, 2, 1, 0]
+            # list(range(5,-1,-1)) => [5, 4, 3, 2, 1, 0]
             for i in range(self.size-1, -1, -1):
                 x = self.domain[i]
                 if self.cdf(x) <= p:
