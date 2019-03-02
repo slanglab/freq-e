@@ -104,7 +104,10 @@ def calc_log_odds(pos_probs):
     """
     pos_probs : probabilites of the positive class
     """
-    return np.log(pos_probs/(1.0 - pos_probs))
+    # Deal with prob=1.0 or prob=0.0.
+    p = np.float64(pos_probs)
+    p = np.clip(p, 1e-15, 1 - 1e-15)
+    return np.log(p/(1.0 - p))
 
 class FreqEstimate(): 
 
