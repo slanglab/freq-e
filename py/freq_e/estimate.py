@@ -231,53 +231,6 @@ def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
     log_odds = calc_log_odds(test_pred_probs)
     return _infer_freq(log_odds, label_prior, conf_level)
 
-
-def infer_freq(X_test=None, label_prior=None, conf_level=0.95, trained_model=None, test_pred_probs=None):
-    """
-    "LR-Implicit" or "Implict likelihood generative reinterpretation" method 
-    from Keith and O'Connor 2018
-
-    Point estimate and confidence intervals
-
-    Parameters
-    ----------
-    label_prior : float
-        Positive class label prior 
-        Most often, this is estimated empirically via the training set
-        (i.e. label_prior = np.mean(y_train))
-
-    X_test : numpy.ndarray 
-        Numpy array of the test X matrix 
-
-    conf_level : float, default: 0.95
-        The confidence level for the inferred confidence intervals 
-        Must be between 0.0 and 1.0  
-
-    trained_model : skelarn.linear_model class, default : None 
-        As an alternative to test_pred_probs, a user may pass in a trained_model
-        which will directly find the predicted probabilities on the test instances
-
-    test_pred_probs : numpy.ndarray
-        predicted probability (of the positive class) on the 
-        test set  
-    """
-    if trained_model is None and test_pred_probs is None:
-        raise Exception('Must specify EITHER a trained model (sklearn.linear_model class) OR test_pred_probs (predicted probabilities on the test instances)') 
-
-    assert 0.0 < conf_level < 1.0
-
-    if trained_model == None:
-        if type(test_pred_probs) != np.ndarray: raise Exception('test_pred_probs must be a numpy array')
-        assert test_pred_probs.shape[0] == X_test.shape[0] 
-        log_odds = calc_log_odds(test_pred_probs)
-    elif trained_model != None:  
-        try: 
-            log_odds = trained_model.decision_function(X_test)
-        except: 
-            print('trained_model must be a sklearn trained classifier that has a .decision_function()')
-
-    return _infer_freq(log_odds, label_prior, conf_level)
-
 def _infer_freq(log_odds, label_prior, conf_level):
     """This is not intended to be called directly"""
     log_post_probs = mll_curve_simple(log_odds, label_prior)
