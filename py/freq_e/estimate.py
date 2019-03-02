@@ -112,27 +112,29 @@ class FreqEstimate():
         self.trained_model = None 
         self.train_prior = None  
 
-    def train_cross_val(self, X, y):
+    def train_cross_val(self, X, y, verbose=True):
         """
         Trains logistic regression estimator via 
         - grid search over L1 penalty 
         - finding the best model by minimizing log loss on 10-fold cross-validation 
+        Also store information about the training set (its label prior)
+        necessary for inference on new test sets.
         """
         assert X.shape[0] == y.shape[0]
         #check to make sure y_train is binary (only 0's and 1's)
         assert np.array_equal(y, y.astype(bool)) == True 
         assert type(X) == type(y) == np.ndarray
 
-        print('TRAINING LOGISTIC REGRESSION MODEL')
+        if verbose: print('TRAINING LOGISTIC REGRESSION MODEL')
         parameters = {'C': [1.0/2.0**reg for reg in np.arange(-12, 12)]}
         lr = LogisticRegression(penalty='l1', solver='liblinear')
         grid_search = GridSearchCV(lr, parameters, cv=10, refit=True, 
                                    scoring=make_scorer(log_loss, greater_is_better=False))
         grid_search.fit(X, y)
         best_model = grid_search.best_estimator_
-        print(best_model)
+        if verbose: print('Best model:', best_model)
         train_mean_acc = best_model.score(X, y)
-        print('Training mean accuracy=', train_mean_acc)
+        if verbose: print('Training mean accuracy=', train_mean_acc)
         self.trained_model = best_model
         self.train_prior = np.mean(y)
 
