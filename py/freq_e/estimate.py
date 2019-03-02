@@ -55,15 +55,15 @@ def mll_curve_simple(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
     assert is_scalar(label_prior)
     assert 0 <= label_prior <= 1
     label_prior = float(label_prior)
-
-    ret = np.zeros(len(theta_grid))
     pos_odds = np.exp(pred_logodds)
     pos_prob = pos_odds / (1+pos_odds)
     neg_prob = 1-pos_prob
-
     adj_pos_prob = pos_prob / label_prior
     adj_neg_prob = neg_prob / (1-label_prior)
+    return fill_mll_curve_slow(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob)
 
+def fill_mll_curve_slow(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob):
+    ret = np.zeros(len(theta_grid))
     for grid_index in range(len(theta_grid)):
         theta = theta_grid[grid_index]
         for d in range(Ndoc):
@@ -160,17 +160,23 @@ class FreqEstimate():
         assert type(X_test) == np.ndarray
         assert conf_level > 0.0 and conf_level < 1.0 
 
-        if self.trained_model == None or self.train_prior == None:
+        if self.trained_model is None or self.train_prior is None:
             raise Exception('must call .fit() function first ')
-        elif self.trained_model != None:  
-            log_odds = self.trained_model.decision_function(X_test)
+        log_odds = self.trained_model.decision_function(X_test)
 
-        log_post_probs = mll_curve_simple(log_odds, self.train_prior)
-        map_est = generative_get_map_est(log_post_probs)
-        conf_interval = get_conf_interval(log_post_probs, conf_level)
-        return {'point': map_est, 'conf_interval_'+str(int(conf_level*100))+'%': conf_interval}
+        return _infer_freq(log_odds, self.train_prior, conf_level)
 
-def infer_freq(X_test, label_prior, conf_level=0.95, trained_model=None, test_pred_probs=None):
+def infer_freq_from_predictions(test_pred_probs, label_prior=0.5, conf_level=0.95):
+    """
+    Infer class prevalence of a test set, from a supervised model's individual
+    predictions.
+    """
+    pass
+
+def infer_freq_from_classifier(trained_model, X_test, label_prior=0.5, conf_level=0.95):
+    pass
+
+def infer_freq(X_test=None, conf_level=0.95, label_prior=None, trained_model=None, test_pred_probs=None):
     """
     "LR-Implicit" or "Implict likelihood generative reinterpretation" method 
     from Keith and O'Connor 2018
@@ -199,11 +205,11 @@ def infer_freq(X_test, label_prior, conf_level=0.95, trained_model=None, test_pr
         predicted probability (of the positive class) on the 
         test set  
     """
-    if trained_model == None and type(test_pred_probs) == type(None): 
+    if trained_model is None and test_pred_probs is None:
         raise Exception('Must specify EITHER a trained model (sklearn.linear_model class) OR test_pred_probs (predicted probabilities on the test instances)') 
 
-    assert type(X_test) == np.ndarray
-    assert conf_level > 0.0 and conf_level <1.0 
+    assert isinstance(X_test, np.ndarray)
+    assert 0.0 < conf_level < 1.0
 
     if trained_model == None:
         if type(test_pred_probs) != np.ndarray: raise Exception('test_pred_probs must be a numpy array')
@@ -215,8 +221,11 @@ def infer_freq(X_test, label_prior, conf_level=0.95, trained_model=None, test_pr
         except: 
             print('trained_model must be a sklearn trained classifier that has a .decision_function()')
 
+    return _infer_freq(log_odds, label_prior, conf_level)
+
+def _infer_freq(log_odds, label_prior, conf_level):
+    """This is not intended to be called directly"""
     log_post_probs = mll_curve_simple(log_odds, label_prior)
     map_est = generative_get_map_est(log_post_probs)
     conf_interval = get_conf_interval(log_post_probs, conf_level)
-    return {'point': map_est, 'conf_interval_'+str(int(conf_level*100))+'%': conf_interval}
-
+    return {'point': map_est, 'conf_interval': conf_interval, 'conf_level': conf_level}
