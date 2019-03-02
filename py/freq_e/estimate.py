@@ -31,7 +31,7 @@ def is_scalar(x):
     np.log(5) returns np.float64, not a standard float.
     Apparently bool is included here.
     """
-    return isinstance(x, (int, float, np.float))
+    return isinstance(x, (int, float, np.number))
 
 def mll_curve_simple(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
     """

@@ -18,18 +18,22 @@ from freq_e.ecdf import CategDist
 from freq_e import estimate
 
 def test_scalars():
-    assert estimate.is_scalar(5)
-    assert estimate.is_scalar(1)
-    assert estimate.is_scalar(-1)
-    assert not estimate.is_scalar(None)
-    assert not estimate.is_scalar('a')
-    assert estimate.is_scalar(np.log(5))
-    assert estimate.is_scalar(np.arange(5)[2])
-    assert estimate.is_scalar(np.arange(5)[2])
-    assert estimate.is_scalar(np.nan)
-    assert estimate.is_scalar(np.inf)
-    assert not estimate.is_scalar(np.arange(2))
-    assert not estimate.is_scalar(np.arange(1))
+    s = estimate.is_scalar
+    assert s(5)
+    assert s(1)
+    assert s(-1)
+    assert not s(None)
+    assert not s('a')
+    assert s(np.log(5))
+    assert s(np.float32(5))
+    assert s(np.float64(5))
+    assert s(np.int32(5))
+    assert s(np.int64(5))
+    assert s(np.arange(5)[2])
+    assert s(np.arange(5.0)[2])
+    assert s(np.nan)
+    assert s(np.inf)
+    assert not s(np.arange(1))
 
 def test_hdi():
     d = CategDist({0:1,1:2,2:7})
