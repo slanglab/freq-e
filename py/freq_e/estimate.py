@@ -92,7 +92,7 @@ def generative_get_map_est(log_post_probs):
     mx = np.max(log_post_probs)
     if len(log_post_probs[log_post_probs == mx]) >= 2:
         where = (np.where(log_post_probs == mx))[0]
-        warnings.warn("You have a multimodal posterior distribution where "+str(where)+' Resolving tie by picking the middle value.')
+        warnings.warn("You have a multimodal posterior distribution, with mode indexes "+str(where)+'. Resolving tie by picking the middle value.')
         middle_index = int(np.floor(len(where)/2))
         map_est = DEFAULT_THETA_GRID[where[middle_index]]
     else: 
@@ -117,11 +117,20 @@ class FreqEstimator():
 
     def train_cross_val(self, X, y, verbose=True):
         """
-        Trains logistic regression estimator via 
+        Trains a logistic regression model on supplied training data, and
+        stores it.  After this method is called, the FreqEstimator will be
+        ready to infer prevalence in new test sets.
+        
+        This method uses the following approach for training:
         - grid search over L1 penalty 
-        - finding the best model by minimizing log loss on 10-fold cross-validation 
-        Also store information about the training set (its label prior)
-        necessary for inference on new test sets.
+        - finds best model by minimizing log loss on 10-fold cross-validation 
+
+        Parameters
+        ----------
+        X : shape (num examples) by (num features)
+            Training data feature matrix, a 2-D array.
+        y : shape (num examples)
+            Training data's labels, a 1-D array.
         """
         assert X.shape[0] == y.shape[0]
         #check to make sure y_train is binary (only 0's and 1's)
@@ -138,15 +147,43 @@ class FreqEstimator():
         if verbose: print('Best model:', best_model)
         train_mean_acc = best_model.score(X, y)
         if verbose: print('Training mean accuracy=', train_mean_acc)
-        self.trained_model = best_model
-        self.train_prior = np.mean(y)
 
-    def infer_freq_obj(self, X_test, conf_level=0.95):
+        self.set_trained_model(best_model, np.mean(y))
+
+    def set_trained_model(self, trained_model, label_prior):
         """
-        "LR-Implicit" or "Implict likelihood generative reinterpretation" method 
-        from Keith and O'Connor 2018
+        Instead of having this object train its own model, you can train your
+        own and set it with this method.  
+        
+        After this is called, the FreqEstimator object will be ready to infer
+        prevalence in new test sets.
 
-        Point estimate and confidence intervals
+        Parameters
+        ----------
+        trained_model : skelarn.linear_model class
+            A trained model, which FreqEstimator will use to predict
+            probabilities on the test instances.  (Technically, only
+            .decision_function() is used, and interpreted as log odds.)
+
+        label_prior : float
+            The training-time prior distribution of the positive class.
+            This should be set to the empirical mean from the training data
+            (that is, the proportion of training data with the positive class).
+        """
+        if not hasattr(trained_model, 'decision_function'):
+            raise Exception('trained_model must be a sklearn trained classifier that has a .decision_function()')
+        
+        self.trained_model = trained_model
+        self.train_prior = label_prior
+
+    def infer_freq(self, X_test, conf_level=0.95):
+        """
+        Using the trained model, infer class prevalence for a new set of
+        examples, with the "LR-Implicit" or "Implict likelihood generative
+        reinterpretation" method from Keith and O'Connor 2018.
+
+        Return a point estimate and confidence interval for prevalence of the
+        positive class.
 
         Parameters
         ----------
@@ -154,27 +191,46 @@ class FreqEstimator():
             Numpy array of the test X matrix 
 
         conf_level : float, default: 0.95
-            The confidence level for the inferred confidence intervals 
-            Must be between 0.0 and 1.0  
+            The confidence level for the inferred confidence interval.
+            Must be between 0.0 and 1.0.
         """
         assert type(X_test) == np.ndarray
-        assert conf_level > 0.0 and conf_level < 1.0 
+        assert 0.0 < conf_level < 1.0
 
         if self.trained_model is None or self.train_prior is None:
-            raise Exception('must call .fit() function first ')
+            raise Exception('Must first call .train_cross_val() or .set_trained_model() first.')
         log_odds = self.trained_model.decision_function(X_test)
 
         return _infer_freq(log_odds, self.train_prior, conf_level)
 
-def infer_freq_from_predictions(test_pred_probs, label_prior=0.5, conf_level=0.95):
+def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
     """
     Infer class prevalence of a test set, from a supervised model's individual
-    predictions.
-    """
-    pass
+    predictions, with the "LR-Implicit" or "Implict likelihood generative
+    reinterpretation" method from Keith and O'Connor 2018.
 
-def infer_freq_from_classifier(trained_model, X_test, label_prior=0.5, conf_level=0.95):
-    pass
+    Return a point estimate and confidence interval for prevalence of the
+    positive class.
+
+    Parameters
+    ----------
+    test_pred_probs : numpy.ndarray
+        1-D array of predicted probabilities of the positive class, for each example.
+
+    label_prior : float
+        The training-time prior distribution of the positive class.
+        This should be set to the empirical mean from the training data
+        (that is, the proportion of training data with the positive class).
+
+    conf_level : float, default: 0.95
+        The confidence level for the inferred confidence interval.
+        Must be between 0.0 and 1.0.
+    """
+    if type(test_pred_probs) != np.ndarray: raise Exception('test_pred_probs must be a numpy array')
+    assert 0.0 < conf_level < 1.0
+    log_odds = calc_log_odds(test_pred_probs)
+    return _infer_freq(log_odds, label_prior, conf_level)
+
 
 def infer_freq(X_test=None, label_prior=None, conf_level=0.95, trained_model=None, test_pred_probs=None):
     """
@@ -208,7 +264,6 @@ def infer_freq(X_test=None, label_prior=None, conf_level=0.95, trained_model=Non
     if trained_model is None and test_pred_probs is None:
         raise Exception('Must specify EITHER a trained model (sklearn.linear_model class) OR test_pred_probs (predicted probabilities on the test instances)') 
 
-    assert isinstance(X_test, np.ndarray)
     assert 0.0 < conf_level < 1.0
 
     if trained_model == None:

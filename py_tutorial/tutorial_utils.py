@@ -29,7 +29,7 @@ def get_train_data(fname):
     X_train = dv.fit_transform(train_count_dicts).toarray()
     dv_vocab = np.array(dv.feature_names_)
     X_train, dv_vocab, new_vocab_mask = prune_vocab(X_train, dv_vocab)
-    print("X,Y types:", type(X_train), type(y_train))
+    # print("X,Y types:", type(X_train), type(y_train))
     print("Training X shape:",X_train.shape, "and Y shape:", y_train.shape)
     assert X_train.shape[0] == y_train.shape[0] 
     return X_train, y_train, dv, new_vocab_mask
@@ -48,7 +48,7 @@ def get_test_group(fname, vocab_mask, dict_vect):
     """
     test_count_dicts, y_test = load_x_y_from_json(fname)
     X_test = transform_test(test_count_dicts, vocab_mask, dict_vect)
-    print("X,Y types:", type(X_test), type(y_test))
+    # print("X,Y types:", type(X_test), type(y_test))
     print("Testing X shape:", X_test.shape, "and Y shape:", y_test.shape)
     return X_test, y_test  
 
