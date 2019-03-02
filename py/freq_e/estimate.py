@@ -176,7 +176,7 @@ def infer_freq_from_predictions(test_pred_probs, label_prior=0.5, conf_level=0.9
 def infer_freq_from_classifier(trained_model, X_test, label_prior=0.5, conf_level=0.95):
     pass
 
-def infer_freq(X_test=None, conf_level=0.95, label_prior=None, trained_model=None, test_pred_probs=None):
+def infer_freq(X_test=None, label_prior=None, conf_level=0.95, trained_model=None, test_pred_probs=None):
     """
     "LR-Implicit" or "Implict likelihood generative reinterpretation" method 
     from Keith and O'Connor 2018
