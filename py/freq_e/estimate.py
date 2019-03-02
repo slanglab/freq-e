@@ -26,9 +26,12 @@ DEFAULT_THETA_GRID_EPSILON = .001
 DEFAULT_THETA_GRID = np.arange(0, 1 + DEFAULT_THETA_GRID_EPSILON, DEFAULT_THETA_GRID_EPSILON)
 
 def is_scalar(x):
-    """Type checks for typical numbers. Include np.float since, e.g.
-    np.log(5) returns np.float64, not a standard float."""
-    return isinstance(x, (int,float, np.float))
+    """
+    Type checks for typical scalar numbers. Include np.float since, e.g.
+    np.log(5) returns np.float64, not a standard float.
+    Apparently bool is included here.
+    """
+    return isinstance(x, (int, float, np.float))
 
 def mll_curve_simple(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
     """

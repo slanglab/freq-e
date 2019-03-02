@@ -17,6 +17,20 @@ sys.path.insert(0, os.path.join(myPath, '../py'))
 from freq_e.ecdf import CategDist
 from freq_e import estimate
 
+def test_scalars():
+    assert estimate.is_scalar(5)
+    assert estimate.is_scalar(1)
+    assert estimate.is_scalar(-1)
+    assert not estimate.is_scalar(None)
+    assert not estimate.is_scalar('a')
+    assert estimate.is_scalar(np.log(5))
+    assert estimate.is_scalar(np.arange(5)[2])
+    assert estimate.is_scalar(np.arange(5)[2])
+    assert estimate.is_scalar(np.nan)
+    assert estimate.is_scalar(np.inf)
+    assert not estimate.is_scalar(np.arange(2))
+    assert not estimate.is_scalar(np.arange(1))
+
 def test_hdi():
     d = CategDist({0:1,1:2,2:7})
     x,y = d.hdi(0.0001)
