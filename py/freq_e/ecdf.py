@@ -1,4 +1,3 @@
-import sys, os 
 import numpy as np
 import scipy.misc
 from collections import Counter
@@ -126,29 +125,29 @@ class CategDist:
         else:
             assert False, "bad mode given"
 
-    def hdi(self, alpha):
+    def hdi(self, conf_level):
         """
         Return a pair of values (x1,x2) that is the highest-density *interval*,
         where it represents a CLOSED interval.  Specifically, it has:
          A) x1<=x2,
-         B) Fulfills coverage: P(x1 <= X <= x2) >= alpha, and
-         C) (x2-x1) is smallest among all (x1,x2) pairs with alpha coverage.
+         B) Fulfills coverage: P(x1 <= X <= x2) >= conf_level, and
+         C) (x2-x1) is smallest among all (x1,x2) pairs with conf_level coverage.
 
         This assumes the domain has subtraction semantics (condition C).  If
         the domain is strings, for example, this function won't work.
         This is the highest density *interval*, not *region*; the latter is
         often seen in the Bayesian stats literature, defined as the
-        smallest-volume subset of the domain with prob mass at least alpha.  If
+        smallest-volume subset of the domain with prob mass at least conf_level.  If
         the PMF is multimodal, the HDregion may be different than the
         HDinterval; it could consist of multiple intervals.  If the PMF is
         unimodal, I think the HDregion is always a single interval.
 
-        Also note the stats literature conventionally uses (1-alpha) to refer
-        to coverage.  Maybe we should use a different greek letter here.
+        Conventionally, conf_level = 1-alpha, where 'alpha' is the miscoverage
+        rate (or false positive rate for null hypothesis testing).
         """
-        return self._hdi_sort(alpha)
+        return self._hdi_sort(conf_level)
 
-    def _hdi_sort(self, alpha):
+    def _hdi_sort(self, conf_level):
         # sort domain in descending PMF order
         # tiebreak by closeness to the median, in order to hopefully encourage symmetric intervals in severe circumstances
         # and then prefer leftmost, just to have an arbitrary but stable tiebreak
@@ -167,15 +166,15 @@ class CategDist:
         for i in value_indexes:
             selected_inds.append(i)
             current_coverage += self.probs[i]
-            # print "---- %.17g %.17g %s" % (current_coverage, alpha, selected_inds)
-            if current_coverage >= alpha: break
+            # print "---- %.17g %.17g %s" % (current_coverage, conf_level, selected_inds)
+            if current_coverage >= conf_level: break
         # indexset could be returned as a more principled highest-density set.
         # in fact right now it might incorporate multiple modes
         # but we're using interval semantics, so convert.
         # if we're multimodal, the interval will include a bunch of stuff between them too.
         return (self.domain[min(selected_inds)], self.domain[max(selected_inds)])
 
-    def _hdi_quadratic(self,alpha):
+    def _hdi_quadratic(self,conf_level):
         # Try all starting left-points, and for each, extend to the right until coverage is achieved.
         # Then choose the shortest interval among all left-points.
         # there should be a faster way to do this...
@@ -194,7 +193,7 @@ class CategDist:
             left_cdf = 0 if i==0 else cdf[i-1]
             for j in range(i, self.size):
                 integral = cdf[j]-left_cdf
-                if integral < alpha:
+                if integral < conf_level:
                     continue
                 x1,x2 = self.domain[i], self.domain[j]
                 center_q = left_cdf + integral/2.0
@@ -204,11 +203,11 @@ class CategDist:
         # Sort by interval size and obscure tie-breaking criteria
         keys = list(candidates)
         if not keys:
-            assert False, "Couldn't find an interval of length alpha %s" % alpha
+            assert False, "Couldn't find an interval of length conf_level %s" % conf_level
 
         keys.sort(key=lambda i_j: (
             candidates[i_j[0],i_j[1]][0], # interval size. if ties, then look at:
-            # coverage no bigger than necessary - closest to alpha
+            # coverage no bigger than necessary - closest to conf_level
             candidates[i_j[0],i_j[1]][1],
             # interval closer to center; thus prefer symmetric interval if
             # everything is tied
