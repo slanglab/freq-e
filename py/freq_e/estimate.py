@@ -33,7 +33,7 @@ def is_scalar(x):
     """
     return isinstance(x, (int, float, np.number))
 
-def mll_curve_simple(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
+def mll_curve(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
     """
     pred_logodds: vector length N (num docs), logodds of each's positive class
     label_prior: scalar, a probability
@@ -54,15 +54,18 @@ def mll_curve_simple(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
     assert pred_logodds.shape == (Ndoc,)
     assert is_scalar(label_prior)
     assert 0 <= label_prior <= 1
+    Ndoc = len(pred_logodds)
     label_prior = float(label_prior)
     pos_odds = np.exp(pred_logodds)
     pos_prob = pos_odds / (1+pos_odds)
     neg_prob = 1-pos_prob
     adj_pos_prob = pos_prob / label_prior
     adj_neg_prob = neg_prob / (1-label_prior)
-    return fill_mll_curve_slow(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob)
+    # doc vectorization is faster if more docs than grid points.
+    return fill_mll_curve_vectorize_docs(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob)
 
 def fill_mll_curve_slow(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob):
+    # assumes no 0 or 1 probs. Clip first.
     ret = np.zeros(len(theta_grid))
     for grid_index in range(len(theta_grid)):
         theta = theta_grid[grid_index]
@@ -70,6 +73,25 @@ def fill_mll_curve_slow(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob):
             log_mar_prob = np.log(theta * adj_pos_prob[d] + (1-theta) * adj_neg_prob[d])
             ret[grid_index] += log_mar_prob
     return ret
+
+def fill_mll_curve_vectorize_grid(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob):
+    # assumes no 0 or 1 probs. Clip first.
+    ret = np.zeros(len(theta_grid))
+    theta = theta_grid
+    for d in range(Ndoc):
+        grid_log_mar_probs = np.log(theta * adj_pos_prob[d] + (1-theta) * adj_neg_prob[d])
+        ret += grid_log_mar_probs
+    return ret
+
+def fill_mll_curve_vectorize_docs(Ndoc, theta_grid, adj_pos_prob, adj_neg_prob):
+    # assumes no 0 or 1 probs. Clip first.
+    ret = np.zeros(len(theta_grid))
+    for ti in range(len(theta_grid)):
+        theta = theta_grid[ti]
+        doc_log_mar_probs = np.log(theta * adj_pos_prob + (1-theta) * adj_neg_prob)
+        ret[ti] += np.sum(doc_log_mar_probs)
+    return ret
+    
 
 def get_conf_interval(log_post_probs, conf_level): 
     """
@@ -196,11 +218,9 @@ class FreqEstimator():
         """
         assert type(X_test) == np.ndarray
         assert 0.0 < conf_level < 1.0
-
         if self.trained_model is None or self.train_prior is None:
             raise Exception('Must first call .train_cross_val() or .set_trained_model() first.')
         log_odds = self.trained_model.decision_function(X_test)
-
         return _infer_freq(log_odds, self.train_prior, conf_level)
 
 def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
@@ -232,8 +252,11 @@ def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
     return _infer_freq(log_odds, label_prior, conf_level)
 
 def _infer_freq(log_odds, label_prior, conf_level):
-    """This is not intended to be called directly"""
-    log_post_probs = mll_curve_simple(log_odds, label_prior)
+    """
+    This is not intended to be called directly.
+    Infer class prevalence based on predict log-odds for each example.
+    """
+    log_post_probs = mll_curve(log_odds, label_prior)
     map_est = generative_get_map_est(log_post_probs)
     conf_interval = get_conf_interval(log_post_probs, conf_level)
     return {'point': map_est, 'conf_interval': conf_interval, 'conf_level': conf_level}

@@ -143,8 +143,29 @@ def test_mll():
 
     #worked out this example by hand
     ans = np.array([0.669050, 0.213574])
-    output = estimate.mll_curve_simple(pred_logodds, label_prior, theta_grid=theta_grid_test)
+    output = estimate.mll_curve(pred_logodds, label_prior, theta_grid=theta_grid_test)
     assert np.allclose(ans, output)
+
+def approx_equal(x,y, tol=1e-10):
+    if np.array_equal(x, y): return True
+    return np.sum(np.abs(x - y)) < tol
+
+def test_mll_curve_functions():
+    grid = np.arange(0, 1.1, .1)
+    def run(pos_probs):
+        n = len(pos_probs)
+        curve1 = estimate.fill_mll_curve_slow(n, grid, pos_probs, 1-pos_probs)
+        curve2 = estimate.fill_mll_curve_vectorize_grid(n, grid, pos_probs, 1-pos_probs)
+        curve3 = estimate.fill_mll_curve_vectorize_docs(n, grid, pos_probs, 1-pos_probs)
+        assert approx_equal(curve1, curve2)
+        assert approx_equal(curve1, curve3)
+        assert approx_equal(curve2, curve3)
+
+    for sim in range(5):
+        for n in [2,10,100]:
+            run(np.random.random(size=n))
+    run(np.array([.1, .9]))
+    run(np.array([.8]))
 
 def test_infer_freq():
     freq_e = estimate.FreqEstimator()
