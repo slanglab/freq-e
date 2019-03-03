@@ -179,7 +179,7 @@ class FreqEstimator():
     def infer_freq(self, X_test, conf_level=0.95):
         """
         Using the trained model, infer class prevalence for a new set of
-        examples, with the "LR-Implicit" or "Implict likelihood generative
+        examples, with the "LR-Implicit" or "Implicit likelihood generative
         reinterpretation" method from Keith and O'Connor 2018.
 
         Return a point estimate and confidence interval for prevalence of the
@@ -206,7 +206,7 @@ class FreqEstimator():
 def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
     """
     Infer class prevalence of a test set, from a supervised model's individual
-    predictions, with the "LR-Implicit" or "Implict likelihood generative
+    predictions, with the "LR-Implicit" or "Implicit likelihood generative
     reinterpretation" method from Keith and O'Connor 2018.
 
     Return a point estimate and confidence interval for prevalence of the
