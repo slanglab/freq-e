@@ -221,7 +221,7 @@ class FreqEstimator():
         if self.trained_model is None or self.train_prior is None:
             raise Exception('Must first call .train_cross_val() or .set_trained_model() first.')
         log_odds = self.trained_model.decision_function(X_test)
-        return _infer_freq(log_odds, self.train_prior, conf_level)
+        return _infer_freq_from_pred_logodds(log_odds, self.train_prior, conf_level)
 
 def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
     """
@@ -249,12 +249,11 @@ def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
     if type(test_pred_probs) != np.ndarray: raise Exception('test_pred_probs must be a numpy array')
     assert 0.0 < conf_level < 1.0
     log_odds = calc_log_odds(test_pred_probs)
-    return _infer_freq(log_odds, label_prior, conf_level)
+    return _infer_freq_from_pred_logodds(log_odds, label_prior, conf_level)
 
-def _infer_freq(log_odds, label_prior, conf_level):
+def _infer_freq_from_pred_logodds(log_odds, label_prior, conf_level):
     """
-    This is not intended to be called directly.
-    Infer class prevalence based on predict log-odds for each example.
+    Infer class prevalence based on predicted log-odds for each example.
     """
     log_post_probs = mll_curve(log_odds, label_prior)
     map_est = generative_get_map_est(log_post_probs)
