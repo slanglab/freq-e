@@ -3,7 +3,7 @@
 Use this software to infer the class frequencies in a collection of items (e.g documents or images). 
 For example, given all blog posts about Barack Obama during a certain time period, what is the overall positive sentiment towards him? 
 
-In our [academic paper](http://www.aclweb.org/anthology/D18-1487), we showed that the naive approaches to this problem that aggregated the hard labels or soft probabilies from a trained discriminative classifier were often biased. Instead, this software uses *implicit likelihood* method which combines a discriminitive classifier in a generative framework that allows for more robust estimation when the true training and test group class frequencies differ. 
+In our [academic paper](http://www.aclweb.org/anthology/D18-1487), we showed that the naive approaches to this problem that aggregated the hard labels or soft probabilies from a trained discriminative classifier were often biased. Instead, this software uses an *implicit likelihood* method which combines a discriminitive classifier in a generative framework and allows for more robust estimation when the true training and test group class frequencies differ. 
 
 # Installation 
 
