@@ -137,7 +137,7 @@ class FreqEstimator():
         self.trained_model = None 
         self.train_prior = None  
 
-    def train_cross_val(self, X, y, verbose=True):
+    def train_cross_val(self, X: np.ndarray, y: np.ndarray, verbose=True):
         """
         Trains a logistic regression model on supplied training data, and
         stores it.  After this method is called, the FreqEstimator will be
@@ -172,7 +172,7 @@ class FreqEstimator():
 
         self.set_trained_model(best_model, np.mean(y))
 
-    def set_trained_model(self, trained_model, label_prior):
+    def set_trained_model(self, trained_model, label_prior: float):
         """
         Instead of having this object train its own model, you can train your
         own and set it with this method.  
@@ -198,7 +198,7 @@ class FreqEstimator():
         self.trained_model = trained_model
         self.train_prior = label_prior
 
-    def infer_freq(self, X_test, conf_level=0.95):
+    def infer_freq(self, X_test: np.ndarray, conf_level=0.95):
         """
         Using the trained model, infer class prevalence for a new set of
         examples, with the "LR-Implicit" or "Implicit likelihood generative
@@ -223,7 +223,7 @@ class FreqEstimator():
         log_odds = self.trained_model.decision_function(X_test)
         return _infer_freq_from_pred_logodds(log_odds, self.train_prior, conf_level)
 
-def infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95):
+def infer_freq_from_predictions(test_pred_probs: np.ndarray, label_prior: float, conf_level=0.95):
     """
     Infer class prevalence of a test set, from a supervised model's individual
     predictions, with the "LR-Implicit" or "Implicit likelihood generative
