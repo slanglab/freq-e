@@ -5,6 +5,8 @@ For example, given all blog posts about Barack Obama during a certain time perio
 
 In our [academic paper](http://www.aclweb.org/anthology/D18-1487), we showed that the naive approaches to this problem that aggregated the hard labels or soft probabilies from a trained discriminative classifier were often biased. Instead, this software uses an *implicit likelihood* method which combines a discriminitive classifier in a generative framework and allows for more robust estimation when the true training and test group class frequencies differ. 
 
+This software currently only supports *binary* predictions. Future work will expand this to multiclass. 
+
 # Installation 
 
 Installing the (test) `freq-e` package: 
