@@ -14,6 +14,7 @@ import numpy as np
 
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(myPath, '../py'))
+import freq_e
 from freq_e.ecdf import CategDist
 from freq_e import estimate
 
@@ -133,8 +134,6 @@ def test_ecdf_functions():
     assert d.icdf(0.2, mode='toobig') == 1
     assert d.icdf(0.2, mode='toosmall') == 1
 
-
-
 def test_mll(): 
     pos_odds = np.array([0.2, 0.7])
     pred_logodds = np.log(pos_odds/(1.0 - pos_odds))
@@ -167,12 +166,15 @@ def test_mll_curve_functions():
     run(np.array([.1, .9]))
     run(np.array([.8]))
 
-def test_infer_freq():
-    freq_e = estimate.FreqEstimator()
-    #test to make sure you can only put in one or the other but not both 
-    with pytest.raises(Exception): freq_e.infer_freq(np.zeros(3), np.zeros((3, 3)), trained_model=None, test_pred_probs=None)
+def test_0_1_cases():
+    #all 0's 
+    for label_prior in [0.3, 0.5, 0.8]: 
+        test_pred_probs = np.zeros(10**5)
+        out = freq_e.infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95)
+        assert out['point'] == 0.0
 
-    #test importing a list to pred_probs
-    with pytest.raises(Exception): freq_e.infer_freq(np.zeros(3), np.zeros((3, 3)), trained_model=None, test_pred_probs=[1, 2, 3])
-
-
+    #all 1's 
+    for label_prior in [0.3, 0.5, 0.8]: 
+        test_pred_probs = np.ones(10**5)
+        out = freq_e.infer_freq_from_predictions(test_pred_probs, label_prior, conf_level=0.95)
+        assert out['point'] == 1.0
