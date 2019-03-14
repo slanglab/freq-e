@@ -53,7 +53,7 @@ def mll_curve(pred_logodds, label_prior, theta_grid=DEFAULT_THETA_GRID):
     Ndoc = len(pred_logodds)
     assert pred_logodds.shape == (Ndoc,)
     assert is_scalar(label_prior)
-    assert 0 <= label_prior <= 1
+    assert 0 < label_prior < 1
     Ndoc = len(pred_logodds)
     label_prior = float(label_prior)
     pos_odds = np.exp(pred_logodds)
