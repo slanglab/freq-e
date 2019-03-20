@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="freq-e-test",
-    version="0.0.1",
+    name="freq-e",
+    version="0.1.0",
     author="Katherine Keith and Brendan O'Connor",
     author_email="kkeith@cs.umass.edu",
     description="Class frequency estimation",

@@ -10,7 +10,7 @@ This software currently only supports *binary* predictions. Future work will exp
 # Installation 
 
 Installing the (test) `freq-e` package: 
-1. `python3 -m pip install --index-url https://test.pypi.org/simple/ freq-e-test` 
+1. `pip install freq-e` 
 2. Then follow `py_tutorial/tutorial.ipynb`. 
 
 # Usage 
