@@ -27,8 +27,5 @@ As we specify in `py_tutorial/tutorial.ipynb`, there are three different ways to
 # Citing 
 If you use this software please cite our paper. Here is the [Bibtex entry](https://kakeith.github.io/bibtex/keith18emnlp.bib). 
 
-# License
-See `py/LICENSE`.
-
 # Contact 
 Contact the software authors with any questions: Katherine Keith (kkeith@cs.umass.edu) and Brendan O'Connor (brenocon@cs.umass.edu).
