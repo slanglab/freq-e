@@ -1,6 +1,6 @@
 # freq-e = (class) frequency estimation 
 
-Frequency estimation of classes. This is also known as prevalence estimation (in statatistics and epidemiology), quantification (in data mining), and class prior estimation (in machine learning). 
+Frequency estimation of classes. This is also known as prevalence estimation (in statistics and epidemiology), quantification (in data mining), and class prior estimation (in machine learning). 
 
 This software accompanies the paper "Uncertainty-aware generative models for inferring document class prevalence" by Katherine Keith and Brendan O'Connor published in EMNLP 2018. 
 
