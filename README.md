@@ -25,7 +25,15 @@ As we specify in `py_tutorial/tutorial.ipynb`, there are three different ways to
 3. Use the standalone `infer_freq_from_predictions()` method and pass in the predicted probabilities of the positive class of the test set. This may be useful in the cases where you have certain classifier architectures that are not built from sklearn (e.g. an LSTM or CNN). 
 
 # Citing 
-If you use this software please cite our paper. Here is the [Bibtex entry](https://kakeith.github.io/bibtex/keith18emnlp.bib). 
+If you use this software please cite our paper. Here is the Bibtex entry: 
+```
+@inproceedings{keith2018uncertainty,
+  title={Uncertainty-aware generative models for inferring document class prevalence},
+  author={Keith, Katherine and O'Connor, Brendan},
+  booktitle={Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
+  year={2018}
+}
+```
 
 # Contact 
 Contact the software authors with any questions: Katherine Keith (kkeith@cs.umass.edu) and Brendan O'Connor (brenocon@cs.umass.edu).
