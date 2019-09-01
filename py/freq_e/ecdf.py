@@ -231,7 +231,8 @@ def dist_from_logprobs(value_to_unnorm_logprob):
     input to this function is a dictionary.
     """
     unnorm_logprobs = np.array(list(value_to_unnorm_logprob.values()))
-    logZ = scipy.misc.logsumexp(unnorm_logprobs)
+    #logZ = scipy.misc.logsumexp(unnorm_logprobs) #deprecated, use new logsumexp
+    logZ = scipy.special.logsumexp(unnorm_logprobs)
     value_to_norm_logprobs = {k: ulp-logZ for k,ulp in list(value_to_unnorm_logprob.items())}
     # Danger step!  could get unjustified 0s.
     value_to_norm_probs = {k: np.exp(lp) for k,lp in list(value_to_norm_logprobs.items())}
